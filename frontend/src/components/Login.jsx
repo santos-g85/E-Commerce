@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useContext,useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Card,
@@ -7,70 +7,59 @@ import {
   Button,
   Typography,
 } from "@material-tailwind/react";
+import { UserContext } from "../context/UserContext";
 
 const LoginForm = () => {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
+  const { Login } = useContext(UserContext);
 
-    const [name, setName] = useState("");
-    const [password, setPassword] = useState("");
-    const navigate = useNavigate();
+  useEffect(() => {
+    setUsername("");
+    setPassword("");
+  }, []);
 
-    useEffect(()=>{
-        setName("");
-        setPassword("");
-    },[]);
-
-    const handleSubmit= async (e)=>{
-      e.preventDefault(); 
-      console.log("Form submitted");
-        try{
-            const res = await fetch('https://dummyjson.com/auth/login', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                
-                username: name,
-                password: password,
-                expiresInMins: 30, 
-              }),
-            });
-            const data= await res.json();
-            console.log("data:",data);
-
-            if(data){
-              localStorage.setItem("ACCESSTOKEN",data.accessToken);
-              localStorage.setItem("REFRESHTOKEN",data.refreshToken);
-              navigate("/home");
-            }
-            else{
-              alert("login not successful");
-              navigate("/register")
-            }
-        }catch(error){
-          console.log("error loggin in:",error);
-        }
-    };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    try {
+     await Login(username,password);
+     navigate('/home');
+    } catch (error) {
+      console.log("error loggin in:", error);
+    }
+  };
   return (
     <div className="flex justify-center items-center h-screen ">
       <div className="self-center ">
-        <Card  shadow={true} className="p-6 min-w-[400px] w-auto max-w-[500px]">
+        <Card shadow={true} className="p-6 min-w-[400px] w-auto max-w-[500px]">
           <Typography variant="h4" color="blue-gray">
-           Sign In 
+            Sign In
           </Typography>
           <Typography color="gray" className="mt-1 font-normal">
             Nice to meet you! Enter your details to log in.
           </Typography>
-          <form className="mt-8 mb-2 w-80 max-w-screen-lg sm:w-96" autoComplete="off"
-           onSubmit={handleSubmit}>
-
-            <div className="mb-1 flex flex-col gap-6">              
+          {error && (
+            <Typography color="red" className="mt-2">
+              {error}
+            </Typography>
+          )}
+          <form
+            className="mt-8 mb-2 w-80 max-w-screen-lg sm:w-96"
+            autoComplete="off"
+            onSubmit={handleSubmit}
+          >
+            <div className="mb-1 flex flex-col gap-6">
               <Typography variant="h6" color="blue-gray" className="-mb-3">
                 Name
               </Typography>
               <Input
                 size="lg"
-                value={name}
+                value={username}
                 autoComplete="off"
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => setUsername(e.target.value)}
                 placeholder="name@mail.com"
                 className=" !border-t-blue-gray-200 focus:!border-t-gray-900"
                 labelProps={{
@@ -93,7 +82,7 @@ const LoginForm = () => {
                 }}
               />
             </div>
-            <Button className="mt-6" color="blue" fullWidth>
+            <Button type="submit" className="mt-6" color="blue" fullWidth>
               sign in
             </Button>
             <Typography color="gray" className="mt-4 text-center font-normal">
